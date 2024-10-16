@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ItemDataStructs.h"
+#include "Data/ItemDataStructs.h"
 #include "ItemBase.generated.h"
 
 class AInventorySystemCharacter;

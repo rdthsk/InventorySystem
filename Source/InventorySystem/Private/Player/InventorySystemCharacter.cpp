@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "InventorySystemCharacter.h"
+#include "Player/InventorySystemCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+
+#include "DrawDebugHelpers.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -50,8 +52,9 @@ AInventorySystemCharacter::AInventorySystemCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	InteractionCheckFrequency = 0.1f;
+	InteractionCheckDistance = 225.0f;
+	BaseEyeHeight = 74.0f;
 }
 
 void AInventorySystemCharacter::BeginPlay()
@@ -86,10 +89,24 @@ void AInventorySystemCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AInventorySystemCharacter::Look);
+
+		//Interact
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AInventorySystemCharacter::BeginInteract);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &AInventorySystemCharacter::EndInteract);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void AInventorySystemCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if(GetWorld()->TimeSince(InteractionData.LastInteractionCheckTime) > InteractionCheckFrequency)
+	{
+		PerformInteractionCheck();
 	}
 }
 
@@ -126,5 +143,132 @@ void AInventorySystemCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AInventorySystemCharacter::PerformInteractionCheck()
+{
+	InteractionData.LastInteractionCheckTime = GetWorld()->GetTimeSeconds();
+
+	FVector TraceStart{GetPawnViewLocation()};
+	FVector TraceEnd{TraceStart + (GetViewRotation().Vector() * InteractionCheckDistance)};
+
+	float LookDirection = FVector::DotProduct(GetActorForwardVector(), GetViewRotation().Vector());
+
+	if(LookDirection > 0)
+	{
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+		FHitResult TraceHit;
+
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.0f, 0, 2.0f);
+		
+		if(GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+		{
+			if(TraceHit.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass()))
+			{
+				const float Distance = (TraceStart - TraceHit.ImpactPoint).Size();
+
+				if(TraceHit.GetActor() != InteractionData.CurrentInteractable && Distance < InteractionCheckDistance)
+				{
+					FoundInteractable(TraceHit.GetActor());
+					return;
+				}
+
+				if(TraceHit.GetActor() == InteractionData.CurrentInteractable)
+				{
+					return;
+				}
+			}
+		}
+	}
+
+	NoInteractionFound();
+}
+
+void AInventorySystemCharacter::FoundInteractable(AActor* NewInteractable)
+{
+	if(IsInteracting())
+	{
+		EndInteract();
+	}
+
+	if(InteractionData.CurrentInteractable)
+	{
+		TargetInteractable = InteractionData.CurrentInteractable;
+		TargetInteractable->EndFocus();
+	}
+
+	InteractionData.CurrentInteractable = NewInteractable;
+	TargetInteractable = NewInteractable;
+
+	TargetInteractable->BeginFocus();
+}
+
+void AInventorySystemCharacter::NoInteractionFound()
+{
+	if(IsInteracting())
+	{
+		GetWorldTimerManager().ClearTimer(TimerHandle_Interaction);
+	}
+
+	if(InteractionData.CurrentInteractable)
+	{
+		if(IsValid(TargetInteractable.GetObject()))
+		{
+			TargetInteractable->EndFocus();
+		}
+	}
+
+	//TODO: Hide interaction widget on the HUD
+
+	InteractionData.CurrentInteractable = nullptr;
+	TargetInteractable = nullptr;
+}
+
+void AInventorySystemCharacter::BeginInteract()
+{
+	// Verify nothing has changed with the interactable state since beginning the interaction
+	PerformInteractionCheck();
+
+	if(InteractionData.CurrentInteractable)
+	{
+		if(IsValid(TargetInteractable.GetObject()))
+		{
+			TargetInteractable->BeginInteract();
+
+			if(FMath::IsNearlyZero(TargetInteractable->InteractableData.InteractionDuration, 0.1f))
+			{
+				Interact();
+			}
+			else
+			{
+				GetWorldTimerManager().SetTimer(TimerHandle_Interaction,
+					this,
+					&AInventorySystemCharacter::Interact,
+					TargetInteractable->InteractableData.InteractionDuration,
+					false);
+			}
+		}
+	}
+}
+
+void AInventorySystemCharacter::EndInteract()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_Interaction);
+
+	if(IsValid(TargetInteractable.GetObject()))
+	{
+		TargetInteractable->EndInteract();
+	}
+}
+
+void AInventorySystemCharacter::Interact()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_Interaction);
+
+	if(IsValid(TargetInteractable.GetObject()))
+	{
+		TargetInteractable->Interact();
 	}
 }
