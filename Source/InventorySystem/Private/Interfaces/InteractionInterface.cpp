@@ -24,7 +24,7 @@ void IInteractionInterface::EndInteract()
 
 }
 
-void IInteractionInterface::Interact()
+void IInteractionInterface::Interact(AInventorySystemCharacter* PlayerCharacter)
 {
 
 }
