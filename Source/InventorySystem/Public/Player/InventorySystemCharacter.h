@@ -9,6 +9,8 @@
 #include "Engine.h"
 #include "InventorySystemCharacter.generated.h"
 
+class AInventorySystemHUD;
+
 USTRUCT()
 struct FInteractionData
 {
@@ -89,6 +91,9 @@ protected:
 	// To add mapping context
 	virtual void BeginPlay();
 
+	UPROPERTY()
+	AInventorySystemHUD* HUD;
+	
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
 	TScriptInterface<IInteractionInterface> TargetInteractable;
 

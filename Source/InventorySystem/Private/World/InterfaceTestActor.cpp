@@ -1,7 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "World/InterfaceTestActor.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values
 AInterfaceTestActor::AInterfaceTestActor()
@@ -19,6 +17,7 @@ void AInterfaceTestActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	InteractableData = InstanceInteractableData;
 }
 
 // Called every frame

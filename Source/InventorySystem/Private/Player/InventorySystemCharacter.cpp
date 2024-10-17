@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 
 #include "DrawDebugHelpers.h"
+#include "UserInterface/InventorySystemHUD.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -61,6 +62,8 @@ void AInventorySystemCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	HUD = Cast<AInventorySystemHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());	
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -200,6 +203,8 @@ void AInventorySystemCharacter::FoundInteractable(AActor* NewInteractable)
 	InteractionData.CurrentInteractable = NewInteractable;
 	TargetInteractable = NewInteractable;
 
+	HUD->UpdateInteractionWidget(&TargetInteractable->InteractableData);
+	
 	TargetInteractable->BeginFocus();
 }
 
@@ -218,7 +223,7 @@ void AInventorySystemCharacter::NoInteractionFound()
 		}
 	}
 
-	//TODO: Hide interaction widget on the HUD
+	HUD->HideInteractionWidget();
 
 	InteractionData.CurrentInteractable = nullptr;
 	TargetInteractable = nullptr;
