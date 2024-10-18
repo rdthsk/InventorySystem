@@ -56,6 +56,7 @@ void UInteractionWidget::UpdateWidget(const FInteractableData* InteractableData)
 		
 	}
 
+	NameText->SetText(InteractableData->Name);
 	ActionText->SetText(InteractableData->Action);
 }
 
