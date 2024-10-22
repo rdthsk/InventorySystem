@@ -6,7 +6,9 @@
 #include "Data/ItemDataStructs.h"
 #include "ItemBase.generated.h"
 
+class UInventoryComponent;
 class AInventorySystemCharacter;
+
 /**
  * 
  */
@@ -17,8 +19,8 @@ class INVENTORYSYSTEM_API UItemBase : public UObject
 
 public:
 
-	/*UPROPERTY()
-	UInventoryComponent* OwningInventory;*/
+	UPROPERTY()
+	UInventoryComponent* OwningInventory;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	int32 Quantity;

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Items/ItemBase.h"
+#include "Components/InventoryComponent.h"
 
 UItemBase::UItemBase()
 {
@@ -29,13 +30,13 @@ void UItemBase::SetQuantity(int32 NewQuantity)
 	{
 		Quantity = FMath::Clamp(NewQuantity, 0, NumericData.bIsStackable ? NumericData.MaxStackSize : 1);
 
-		/*if(OwningInventory)
+		if(OwningInventory)
 		{
 			if(Quantity <= 0)
 			{
-				OwningInventory->RemoveItem();
+				OwningInventory->RemoveSingleInstanceOfItem(this);
 			}
-		}*/
+		}
 	}
 }
 
