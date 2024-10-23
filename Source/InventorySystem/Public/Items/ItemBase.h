@@ -46,8 +46,13 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	FItemNumericData NumericData;
 
+	bool bIsCopy;
+	bool bIsPickup;
+
 	UItemBase();
 
+	void ResetItemFlags();
+	
 	UItemBase* CreateItemCopy() const;
 
 	UFUNCTION(Category = "Item")

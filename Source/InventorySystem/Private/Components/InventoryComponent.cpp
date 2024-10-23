@@ -105,10 +105,32 @@ void UInventoryComponent::SplitExistingStack(UItemBase* ItemIn, const int32 Amou
 	}
 }
 
-FItemAddResult UInventoryComponent::HandleNonStackableItems(UItemBase* ItemIn, int32 RequestedAddAmount)
+FItemAddResult UInventoryComponent::HandleNonStackableItems(UItemBase* InputItem, int32 RequestedAddAmount)
 {
-	FItemAddResult Result;
-	return Result;
+	// check if in the input item has valid weight
+	if(FMath::IsNearlyZero(InputItem->GetItemSingleWeight()) || InputItem->GetItemSingleWeight() < 0)
+	{
+		return FItemAddResult::AddedNone(FText::Format(
+			FText::FromString("Could not add {0} to the inventory. Item has invalid weight value."), InputItem->TextData.Name));
+	}
+
+	// will the item weight overflow weight capacity
+	if(InventoryTotalWeight + InputItem->GetItemSingleWeight() > GetWeightCapacity())
+	{
+		return FItemAddResult::AddedNone(FText::Format(
+			FText::FromString("Could not add {0} to the inventory. Item would overflow weight limit."), InputItem->TextData.Name));
+	}
+
+	// adding one more item would overflow slot capacity
+	if(InventoryContents.Num() + 1 > InventorySlotsCapacity)
+	{
+		return FItemAddResult::AddedNone(FText::Format(
+			FText::FromString("Could not add {0} to the inventory. All inventory slots are full."), InputItem->TextData.Name));
+	}
+
+	AddNewItem(InputItem, RequestedAddAmount);
+	return FItemAddResult::AddedAll(RequestedAddAmount ,FText::Format(
+			FText::FromString("Successfully added {0} {1} to the inventory."), RequestedAddAmount,InputItem->TextData.Name));
 }
 
 int32 UInventoryComponent::HandleStackableItems(UItemBase* ItemIn, int32 RequestedAddAmount)
@@ -118,12 +140,61 @@ int32 UInventoryComponent::HandleStackableItems(UItemBase* ItemIn, int32 Request
 
 FItemAddResult UInventoryComponent::HandleAddItem(UItemBase* InputItem)
 {
-	FItemAddResult Result;
-	return Result;
-}
+	if(GetOwner())
+	{
+		const int32 InitialRequestedAddAmount = InputItem->Quantity;
 
+		//Handle non-stackable items
+		if(!InputItem->NumericData.bIsStackable)
+		{
+			return HandleNonStackableItems(InputItem, InitialRequestedAddAmount);
+		}
+
+		//Handle stackable items
+		const int32 StackableAmountAdded = HandleStackableItems(InputItem, InitialRequestedAddAmount);
+
+		if(StackableAmountAdded == InitialRequestedAddAmount)
+		{
+			return FItemAddResult::AddedAll(StackableAmountAdded ,FText::Format(
+			FText::FromString("Successfully added {0} {1} to the inventory."), StackableAmountAdded,InputItem->TextData.Name));
+		}
+
+		if(StackableAmountAdded < InitialRequestedAddAmount && StackableAmountAdded > 0)
+		{
+			return FItemAddResult::AddedPartial(StackableAmountAdded,FText::Format(FText::FromString("Successfully added {0} {1} to the inventory."), StackableAmountAdded,InputItem->TextData.Name));
+		}
+
+		if(StackableAmountAdded <= 0)
+		{
+			return FItemAddResult::AddedNone(FText::Format(
+			FText::FromString("Could not add {0} to the inventory. All inventory slots are full."), InputItem->TextData.Name));
+		}
+	}
+
+	return FItemAddResult::AddedNone(FText::Format(
+			FText::FromString("Could not add {0} to the inventory. All inventory slots are full."), InputItem->TextData.Name));
+}
 
 void UInventoryComponent::AddNewItem(UItemBase* Item, const int32 AmountToAdd)
 {
-	
+	UItemBase* NewItem;
+
+	if(Item->bIsCopy || Item->bIsPickup)
+	{
+		// if the item is already a copy, or is a world pickup
+		NewItem = Item;
+		NewItem->ResetItemFlags();
+	}
+	else
+	{
+		// used when splitting or dragging to/from another inventory
+		NewItem = Item->CreateItemCopy();
+	}
+
+	NewItem->OwningInventory = this;
+	NewItem->SetQuantity(AmountToAdd);
+
+	InventoryContents.Add(NewItem);
+	InventoryTotalWeight += NewItem->GetItemStackWeight();
+	OnInventoryUpdated.Broadcast();
 }
