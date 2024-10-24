@@ -29,7 +29,7 @@ void UInventoryTooltip::NativeConstruct()
 			ItemType->SetText(FText::FromString("Consumable"));
 			DamageValue->SetVisibility(ESlateVisibility::Collapsed);
 			ArmorRating->SetVisibility(ESlateVisibility::Collapsed);
-			SellValue->SetVisibility(ESlateVisibility::Collapsed);
+			MaxStackSize->SetVisibility(ESlateVisibility::Collapsed);
 			break;
 		
 		case EItemType::Quest:
@@ -40,7 +40,7 @@ void UInventoryTooltip::NativeConstruct()
 			DamageValue->SetVisibility(ESlateVisibility::Collapsed);
 			ArmorRating->SetVisibility(ESlateVisibility::Collapsed);
 			UsageText->SetVisibility(ESlateVisibility::Collapsed);
-			SellValue->SetVisibility(ESlateVisibility::Collapsed);
+			MaxStackSize->SetVisibility(ESlateVisibility::Collapsed);
 			break;
 
 		default:
@@ -52,7 +52,7 @@ void UInventoryTooltip::NativeConstruct()
 	ArmorRating->SetText(FText::AsNumber(ItemBeingHovered->ItemStatistics.ArmorRating));
 	UsageText->SetText(ItemBeingHovered->TextData.UsageText);
 	ItemDescription->SetText(ItemBeingHovered->TextData.Description);
-	SellValue->SetText(FText::AsNumber(ItemBeingHovered->ItemStatistics.SellValue));
+	MaxStackSize->SetText(FText::AsNumber(ItemBeingHovered->NumericData.MaxStackSize));
 	StackWeight->SetText(FText::AsNumber(ItemBeingHovered->GetItemStackWeight()));
 
 	if(ItemBeingHovered->NumericData.bIsStackable)
