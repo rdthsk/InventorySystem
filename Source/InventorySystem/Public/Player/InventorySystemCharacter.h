@@ -70,6 +70,10 @@ class AInventorySystemCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
 
+	/** Interact Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ToggleMenuAction;
+
 public:
 	AInventorySystemCharacter();
 	/** Returns CameraBoom subobject **/
@@ -95,6 +99,8 @@ protected:
 	
 	// To add mapping context
 	virtual void BeginPlay();
+
+	void ToggleMenu();
 
 	UPROPERTY()
 	AInventorySystemHUD* HUD;

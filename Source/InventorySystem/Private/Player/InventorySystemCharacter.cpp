@@ -101,6 +101,9 @@ void AInventorySystemCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 		//Interact
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AInventorySystemCharacter::BeginInteract);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &AInventorySystemCharacter::EndInteract);
+
+		// Toggle Menu
+		EnhancedInputComponent->BindAction(ToggleMenuAction, ETriggerEvent::Triggered, this, &AInventorySystemCharacter::ToggleMenu);
 	}
 	else
 	{
@@ -279,6 +282,11 @@ void AInventorySystemCharacter::Interact()
 	{
 		TargetInteractable->Interact(this);
 	}
+}
+
+void AInventorySystemCharacter::ToggleMenu()
+{
+	HUD->ToggleMenu();
 }
 
 void AInventorySystemCharacter::UpdateInteractionWidget() const
