@@ -12,6 +12,7 @@
 class UItemBase;
 class UInventoryComponent;
 class AInventorySystemHUD;
+class UTimelineComponent;
 
 USTRUCT()
 struct FInteractionData
@@ -71,9 +72,13 @@ class AInventorySystemCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
 
-	/** Interact Input Action */
+	/** Toggle Menu Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ToggleMenuAction;
+
+	/** Aim Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AimAction;
 
 public:
 	AInventorySystemCharacter();
@@ -90,6 +95,8 @@ public:
 
 	void DropItem(UItemBase* ItemToDrop, const int32 QuantityToDrop);
 
+	bool bAiming;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -104,6 +111,15 @@ protected:
 	virtual void BeginPlay();
 
 	void ToggleMenu();
+
+	void Aim();
+	void StopAiming();
+
+	UFUNCTION()
+	void UpdateCameraTimeline(const float TimelineValue) const;
+
+	UFUNCTION()
+	void CameraTimelineEnd();
 
 	UPROPERTY()
 	AInventorySystemHUD* HUD;
@@ -122,6 +138,18 @@ protected:
 
 	FInteractionData InteractionData;
 
+	// timeline	properties used for camera aiming and transition
+	UPROPERTY(VisibleAnywhere, Category = "Character | Camera")
+	FVector DefaultCameraLocation;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Camera")
+	FVector AimingCameraLocation;
+
+	TObjectPtr<UTimelineComponent> AimingCameraTimeline;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character | Aim Timeline")
+	UCurveFloat* AimingCameraCurve;
+	
 	void PerformInteractionCheck();
 	void FoundInteractable(AActor* NewInteractable);
 	void NoInteractionFound();
