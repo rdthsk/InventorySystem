@@ -173,7 +173,7 @@ void AInventorySystemCharacter::PerformInteractionCheck()
 		QueryParams.AddIgnoredActor(this);
 		FHitResult TraceHit;
 
-		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.0f, 0, 2.0f);
+		/*DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 1.0f, 0, 2.0f);*/
 		
 		if(GetWorld()->LineTraceSingleByChannel(TraceHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
 		{

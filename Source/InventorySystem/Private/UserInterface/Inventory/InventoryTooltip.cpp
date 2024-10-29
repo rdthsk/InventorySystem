@@ -49,6 +49,27 @@ void UInventoryTooltip::NativeConstruct()
 			break;
 	}
 
+	switch (ItemBeingHovered->ItemQuality)
+	{
+	case EItemQuality::Shoddy:
+		ItemName->SetColorAndOpacity(FLinearColor::Gray);
+		break;
+	case EItemQuality::Common:
+		ItemName->SetColorAndOpacity(FLinearColor::White);
+		break;
+	case EItemQuality::Quality:
+		ItemName->SetColorAndOpacity(FLinearColor(0.0f, 0.51f, 0.169f));
+		break;
+	case EItemQuality::Mastercrafted:
+		ItemName->SetColorAndOpacity(FLinearColor(0.0f, 0.4f, 0.75f));
+		break;
+	case EItemQuality::Grandmaster:
+		ItemName->SetColorAndOpacity(FLinearColor(1.0f, 0.45f, 0.0f));
+		break;
+	default:
+		break;
+	}
+	
 	ItemName->SetText(ItemBeingHovered->TextData.Name);
 	DamageValue->SetText(FText::AsNumber(ItemBeingHovered->ItemStatistics.DamageValue));
 	ArmorRating->SetText(FText::AsNumber(ItemBeingHovered->ItemStatistics.ArmorRating));
