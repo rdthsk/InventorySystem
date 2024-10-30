@@ -30,20 +30,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Pickup | Components")
 	UStaticMeshComponent* PickupMesh;
 
-	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
-	UDataTable* ItemDataTable;
-
-	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
-	FName DesiredItemID;
-
 	UPROPERTY(VisibleAnywhere, Category = "Pickup | Item Reference")
 	UItemBase* ItemReference;
 
-	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
-	int32  ItemQuantity;
-	
-	UPROPERTY(VisibleInstanceOnly, Category = "Pickup | Interaction")
+	UPROPERTY(VisibleInstanceOnly, Category = "Pickup | Interaction Data")
 	FInteractableData InstanceInteractableData;
+
+	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
+	int32 ItemQuantity;
+
+	UPROPERTY(EditInstanceOnly, Category = "Pickup | Item Initialization")
+	FDataTableRowHandle ItemRowHandle;
 	
 	virtual void BeginPlay() override;
 
